@@ -1,0 +1,16 @@
+{
+  "name": "localserv-nearnest",
+  "version": "1.0.0",
+  "description": "Local Services Discovery & Booking Platform (HACKVIBE Round 1)",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build && cd ../backend && npm install",
+    "start": "node backend/server.js",
+    "dev:backend": "cd backend && node server.js",
+    "dev:frontend": "cd frontend && npm run dev",
+    "seed": "cd backend && node seed/seed.js",
+    "test:e2e": "cd backend && node test-e2e.js"
+  },
+  "keywords": ["hackathon", "booking", "services", "mern", "local-services"],
+  "author": "",
+  "license": "MIT"
+}

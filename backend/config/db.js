@@ -15,6 +15,20 @@ const connectDB = async () => {
       });
       console.log(`✅ Connected to MongoDB Atlas: ${conn.connection.host}`);
       await ensureMasterAdmin();
+
+      // Auto-seed if Atlas database is currently empty so stores appear immediately
+      try {
+        const Business = (await import('../models/Business.js')).default;
+        const count = await Business.countDocuments();
+        if (count === 0) {
+          console.log('🌱 Empty database detected on Atlas. Seeding verified stores...');
+          const { default: seedRunner } = await import('../seed/autoSeed.js');
+          await seedRunner();
+        }
+      } catch (seedErr) {
+        console.warn('Auto-seed check note:', seedErr.message);
+      }
+
       return conn;
     } catch (error) {
       console.warn(`⚠️ Failed to connect to MongoDB Atlas: ${error.message}`);
@@ -67,3 +81,4 @@ const connectDB = async () => {
 };
 
 export default connectDB;
+

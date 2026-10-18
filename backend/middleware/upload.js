@@ -28,20 +28,20 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter: accept standard image formats
+// File filter: accept safe binary image formats (SVG disallowed to prevent XSS)
 const fileFilter = (req, file, cb) => {
-  const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+  const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files (JPEG, PNG, WEBP, GIF, SVG) are permitted!'), false);
+    cb(new Error('Security Policy: Only secure image formats (JPEG, PNG, WEBP) are permitted. SVG/GIF files are disallowed.'), false);
   }
 };
 
 export const uploadPhotos = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10 MB per file limit
+    fileSize: 5 * 1024 * 1024, // 5 MB per file safe limit
   },
   fileFilter,
 });

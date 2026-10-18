@@ -29,10 +29,82 @@ connectDB();
 
 const app = express();
 
-// Body parser
-app.use(express.json());
+// Security: Disable X-Powered-By header to prevent technology fingerprinting
+app.disable('x-powered-by');
 
-// Enable CORS with production domain support
+// Security Headers Middleware (Clickjacking, MIME Sniffing, HSTS, XSS)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// Body parser with strict size limit to prevent memory exhaustion DoS
+app.use(express.json({ limit: '2mb' }));
+
+// NoSQL Injection Sanitizer: Recursively strip keys starting with '$' or containing '.'
+const sanitizeInput = (obj) => {
+  if (!obj || typeof obj !== 'object') return obj;
+  for (const key of Object.keys(obj)) {
+    if (key.startsWith('$') || key.includes('.')) {
+      delete obj[key];
+    } else if (typeof obj[key] === 'object') {
+      sanitizeInput(obj[key]);
+    }
+  }
+  return obj;
+};
+
+app.use((req, res, next) => {
+  if (req.body) sanitizeInput(req.body);
+  if (req.query) sanitizeInput(req.query);
+  if (req.params) sanitizeInput(req.params);
+  next();
+});
+
+// In-Memory Brute-Force Rate Limiter for Authentication Endpoints (15 attempts / 15 mins per IP)
+const authAttemptMap = new Map();
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, data] of authAttemptMap.entries()) {
+    if (now > data.resetTime) {
+      authAttemptMap.delete(ip);
+    }
+  }
+}, 5 * 60 * 1000);
+
+const authRateLimiter = (req, res, next) => {
+  const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000; // 15 minutes window
+  const maxAttempts = 15; // Max 15 login/register attempts per 15 mins per IP
+
+  const record = authAttemptMap.get(ip) || { count: 0, resetTime: now + windowMs };
+
+  if (now > record.resetTime) {
+    record.count = 1;
+    record.resetTime = now + windowMs;
+  } else {
+    record.count += 1;
+  }
+
+  authAttemptMap.set(ip, record);
+
+  if (record.count > maxAttempts) {
+    const minutesLeft = Math.ceil((record.resetTime - now) / (1000 * 60));
+    return res.status(429).json({
+      success: false,
+      message: `Too many authentication attempts from this IP address. Please try again in ${minutesLeft} minute(s).`,
+    });
+  }
+
+  next();
+};
+
+// Enable CORS with strict production domain filtering
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
@@ -56,7 +128,7 @@ app.use(
       ) {
         return callback(null, true);
       }
-      return callback(null, true);
+      return callback(new Error('Blocked by CORS security policy: Origin not allowed'), false);
     },
     credentials: true,
   })
@@ -67,8 +139,8 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Mount routers
-app.use('/api/auth', authRoutes);
+// Mount routers (Rate-limit applied to /api/auth)
+app.use('/api/auth', authRateLimiter, authRoutes);
 app.use('/api/businesses', businessRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);

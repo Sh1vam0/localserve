@@ -12,6 +12,13 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Please provide name, email, and password' });
     }
 
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters long for security',
+      });
+    }
+
     const cleanEmail = email.trim().toLowerCase();
     const cleanUsername = username ? username.trim().toLowerCase() : cleanEmail.split('@')[0];
 
@@ -100,18 +107,69 @@ export const login = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
+    // Check if account is temporarily locked due to excessive failed attempts
+    if (user.isLocked()) {
+      const minutesLeft = Math.ceil((new Date(user.lockUntil) - new Date()) / (1000 * 60));
+      await recordAuditLog({
+        action: 'login_blocked_locked',
+        category: 'auth',
+        actor: { id: user._id, name: user.name, email: user.email, role: user.role },
+        description: `Login attempt on locked account: ${user.email} (${minutesLeft}m remaining).`,
+        ipAddress: clientIp,
+        userAgent,
+        status: 'warning',
+      });
+      return res.status(423).json({
+        success: false,
+        message: `Account is temporarily locked due to 5 consecutive failed login attempts. Please try again in ${minutesLeft} minute(s).`,
+      });
+    }
+
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
+      const attempts = (user.failedLoginAttempts || 0) + 1;
+
+      if (attempts >= 5) {
+        user.failedLoginAttempts = 0;
+        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // Lock for 15 minutes
+        await user.save();
+
+        await recordAuditLog({
+          action: 'account_locked',
+          category: 'auth',
+          actor: { id: user._id, name: user.name, email: user.email, role: user.role },
+          description: `Account ${user.email} locked for 15 minutes after 5 consecutive failed login attempts.`,
+          ipAddress: clientIp,
+          userAgent,
+          status: 'warning',
+        });
+
+        return res.status(423).json({
+          success: false,
+          message: 'Account locked for 15 minutes due to 5 consecutive failed password attempts.',
+        });
+      }
+
+      user.failedLoginAttempts = attempts;
+      await user.save();
+
       await recordAuditLog({
         action: 'login_failed',
         category: 'auth',
         actor: { id: user._id, name: user.name, email: user.email, role: user.role },
-        description: `Incorrect password attempt for ${user.email} (${user.role}).`,
+        description: `Incorrect password attempt (${attempts}/5) for ${user.email} (${user.role}).`,
         ipAddress: clientIp,
         userAgent,
         status: 'failed',
       });
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    // Reset failed login attempts upon successful authentication
+    if (user.failedLoginAttempts > 0 || user.lockUntil) {
+      user.failedLoginAttempts = 0;
+      user.lockUntil = null;
+      await user.save();
     }
 
     if (!user.isActive) {

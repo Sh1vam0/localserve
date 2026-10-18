@@ -64,9 +64,22 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    lockUntil: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
+
+// Check if account is currently locked due to excessive failed attempts
+UserSchema.methods.isLocked = function () {
+  return Boolean(this.lockUntil && this.lockUntil > Date.now());
+};
 
 // Hash password before saving
 UserSchema.pre('save', async function (next) {

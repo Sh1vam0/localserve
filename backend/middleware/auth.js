@@ -64,7 +64,13 @@ export const checkAdminPermission = (permission) => {
     }
 
     // Root Super Admin bypasses all sub-permission restrictions
-    if (req.user.isSuperAdmin || req.user.email === 'admin@localserve.com' || req.user.username === 'sh1vam') {
+    const rootEmails = ['admin@localserve.com', 'admin2@localserve.com'];
+    const rootUsernames = ['sh1vam', 'sangamgautam'];
+    if (
+      req.user.isSuperAdmin ||
+      rootEmails.includes(req.user.email) ||
+      rootUsernames.includes(req.user.username)
+    ) {
       return next();
     }
 

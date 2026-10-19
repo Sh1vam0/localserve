@@ -192,24 +192,45 @@ const autoSeed = async () => {
     if (!owner1 || !owner2 || !owner3 || !ownerNCR) {
       console.log('🌱 Populating database with rich demo users...');
 
-      // 1. Root Super Admin (if not present)
-      const adminExists = await User.findOne({ role: 'admin' });
-      if (!adminExists) {
-        await User.create({
+      // 1. Root Super Admins (if not present)
+      const rootAdmins = [
+        {
           name: 'Sh1vam',
           username: 'sh1vam',
           email: 'admin@localserve.com',
           password: 'Sh1vam@admin',
           phone: '+91 99999 88888',
-          role: 'admin',
-          isSuperAdmin: true,
-          adminPermissions: {
-            canVerifyBusinesses: true,
-            canManageUsers: true,
-            canManageBookings: true,
-            canManageAdmins: true,
-          },
+        },
+        {
+          name: 'Sangam Gautam',
+          username: 'SangamGautam',
+          email: 'admin2@localserve.com',
+          password: '@Sangam@admin',
+          phone: '+91 98888 77777',
+        },
+      ];
+
+      for (const root of rootAdmins) {
+        const exists = await User.findOne({
+          $or: [{ email: root.email.toLowerCase() }, { username: root.username.toLowerCase() }],
         });
+        if (!exists) {
+          await User.create({
+            name: root.name,
+            username: root.username,
+            email: root.email.toLowerCase(),
+            password: root.password,
+            phone: root.phone,
+            role: 'admin',
+            isSuperAdmin: true,
+            adminPermissions: {
+              canVerifyBusinesses: true,
+              canManageUsers: true,
+              canManageBookings: true,
+              canManageAdmins: true,
+            },
+          });
+        }
       }
 
       // 2. Owners

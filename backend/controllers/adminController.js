@@ -455,10 +455,12 @@ export const deleteAdmin = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Admin user not found' });
     }
 
-    if (admin.isSuperAdmin || admin.email === 'admin@localserve.com' || admin.username === 'sh1vam') {
+    const rootEmails = ['admin@localserve.com', 'admin2@localserve.com'];
+    const rootUsernames = ['sh1vam', 'sangamgautam'];
+    if (admin.isSuperAdmin || rootEmails.includes(admin.email) || rootUsernames.includes(admin.username)) {
       return res.status(400).json({
         success: false,
-        message: 'Protected Account: The Root Super Admin (Sh1vam) cannot be revoked or deleted!',
+        message: 'Protected Account: Root Super Admin accounts cannot be revoked or deleted!',
       });
     }
 

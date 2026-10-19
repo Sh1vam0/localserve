@@ -29,6 +29,14 @@ connectDB();
 
 const app = express();
 
+// Enable trust proxy for accurate IP rate limiting behind reverse proxies (Render, Cloudflare, Nginx)
+app.set('trust proxy', 1);
+
+// Security Check: Detect default or missing JWT secret in production
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'localserv_hackathon_secret_key_2026')) {
+  console.warn('⚠️ SECURITY WARNING: Using default or missing JWT_SECRET in production! Please set a strong unique secret in environment variables.');
+}
+
 // Security: Disable X-Powered-By header to prevent technology fingerprinting
 app.disable('x-powered-by');
 
@@ -108,26 +116,32 @@ const authRateLimiter = (req, res, next) => {
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'https://localserve-7lp1.onrender.com',
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, Postman, curl, server-to-server)
+      // Allow requests with no origin (mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
-      if (
-        !process.env.NODE_ENV ||
-        process.env.NODE_ENV !== 'production' ||
-        !process.env.CLIENT_URL ||
-        process.env.CLIENT_URL === '*' ||
-        allowedOrigins.includes(origin) ||
-        origin.endsWith('.vercel.app') ||
-        origin.endsWith('.netlify.app') ||
-        origin.endsWith('.onrender.com')
-      ) {
+
+      // In non-production, permit local development hosts
+      if (process.env.NODE_ENV !== 'production') {
+        if (
+          allowedOrigins.includes(origin) ||
+          origin.startsWith('http://localhost:') ||
+          origin.startsWith('http://127.0.0.1:')
+        ) {
+          return callback(null, true);
+        }
+      }
+
+      // In production, strictly match trusted whitelist
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
+
       return callback(new Error('Blocked by CORS security policy: Origin not allowed'), false);
     },
     credentials: true,
@@ -152,12 +166,20 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/location', googleMapsRoutes);
 app.use('/api/google', googleMapsRoutes);
 
-// Serve uploaded store photos statically
+// Serve uploaded store photos statically with security headers
 const uploadsPath = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath, { recursive: true });
 }
-app.use('/uploads', express.static(uploadsPath));
+app.use(
+  '/uploads',
+  express.static(uploadsPath, {
+    setHeaders: (res) => {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Security-Policy', "default-src 'none'");
+    },
+  })
+);
 
 // Serve Frontend Build when dist exists (enables Single-Service Monolithic deployment on Render / VPS)
 const frontendDistPath = path.join(__dirname, '../frontend/dist');

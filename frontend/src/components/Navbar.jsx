@@ -16,6 +16,7 @@ import {
   LocateFixed
 } from 'lucide-react';
 import { useLocationContext } from '../context/LocationContext';
+import LocationPicker from './LocationPicker';
 
 const Navbar = () => {
   const { user, isAuthenticated, isCustomer, isOwner, isAdmin, logout } = useAuth();
@@ -67,22 +68,8 @@ const Navbar = () => {
               Explore All
             </Link>
 
-            {/* Live GPS Location Pill */}
-            <button
-              type="button"
-              onClick={detectLiveLocation}
-              disabled={isDetectingGeo}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-xs ${
-                userGeoLocation?.isLive
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 ring-2 ring-emerald-200'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-700 hover:text-emerald-800'
-              }`}
-              title="Click to detect or refresh live GPS location"
-            >
-              <span className={`w-2 h-2 rounded-full ${userGeoLocation?.isLive ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
-              <LocateFixed size={13} className={isDetectingGeo ? 'animate-spin text-emerald-600' : ''} />
-              <span>{isDetectingGeo ? 'Locating...' : userGeoLocation ? userGeoLocation.city : 'Live Location'}</span>
-            </button>
+            {/* Location Pill & Dropdown ("Near me") */}
+            <LocationPicker />
 
             {isAuthenticated && isCustomer && (
               <>
@@ -183,11 +170,13 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile hamburger button */}
-          <div className="md:hidden flex items-center">
+          {/* Mobile Right Controls: 1-Tap Location Pill + Hamburger Menu */}
+          <div className="md:hidden flex items-center gap-2">
+            <LocationPicker />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-xl text-[#17231d] hover:bg-gray-100"
+              aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -195,85 +184,134 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* SLIDE-OVER NAVIGATION DRAWER */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-[#e4e8e1] bg-white px-4 pt-2 pb-4 space-y-2">
-          <Link
-            to="/"
+        <div className="fixed inset-0 z-50 md:hidden animate-in fade-in duration-200">
+          {/* Backdrop blur */}
+          <div
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-xl text-sm font-bold text-[#17231d] hover:bg-[#edf2eb]"
-          >
-            Discover
-          </Link>
-          <Link
-            to="/search"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-xl text-sm font-bold text-[#17231d] hover:bg-[#edf2eb]"
-          >
-            Explore All
-          </Link>
+            className="absolute inset-0 bg-[#0F221A]/50 backdrop-blur-xs transition-opacity"
+          />
 
-          {isAuthenticated ? (
-            <>
-              {isCustomer && (
-                <Link
-                  to="/my-bookings"
+          {/* Drawer content panel */}
+          <div className="absolute right-0 top-0 bottom-0 w-72 sm:w-80 bg-[#F6F5F0] p-6 shadow-2xl flex flex-col justify-between border-l border-[#e4e8e1]">
+            <div>
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-[#e4e8e1]">
+                <div className="flex items-center gap-2">
+                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-[#0F221A] text-[#DDF279]">
+                    <Compass size={18} />
+                  </span>
+                  <span className="font-bold text-base text-[#0F221A]">
+                    NearNest<span className="text-emerald-700">.</span>
+                  </span>
+                </div>
+                <button
+                  type="button"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-xl text-sm font-bold text-[#17231d] hover:bg-[#edf2eb]"
+                  className="p-1.5 rounded-lg text-[#0F221A]/60 hover:text-[#0F221A] hover:bg-black/5"
+                  aria-label="Close menu"
                 >
-                  My Bookings (Wallet: ₹{user?.walletBalance || 0})
-                </Link>
-              )}
-              {isOwner && (
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Navigation Links */}
+              <nav className="mt-5 space-y-1">
                 <Link
-                  to="/owner/dashboard"
+                  to="/"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-xl text-sm font-bold text-[#17231d] hover:bg-[#edf2eb]"
+                  className="block px-3 py-2.5 rounded-xl text-sm font-bold text-[#0F221A] hover:bg-white transition"
                 >
-                  Owner Dashboard
+                  Discover
                 </Link>
-              )}
-              {isAdmin && (
                 <Link
-                  to="/admin/dashboard"
+                  to="/search"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-xl text-sm font-bold text-[#17231d] hover:bg-[#edf2eb]"
+                  className="block px-3 py-2.5 rounded-xl text-sm font-bold text-[#0F221A] hover:bg-white transition"
                 >
-                  Admin Hub
+                  Explore All Studios
                 </Link>
-              )}
-              <Link
-                to="/profile"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl text-sm font-bold text-[#17231d] hover:bg-[#edf2eb]"
-              >
-                Profile ({user?.name})
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-3 py-2 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50"
-              >
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <div className="pt-2 border-t border-[#e4e8e1] flex flex-col gap-2">
-              <Link
-                to="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="btn-dark justify-center text-xs"
-              >
-                Log In
-              </Link>
-              <Link
-                to="/register"
-                onClick={() => setMobileMenuOpen(false)}
-                className="btn-lime justify-center text-xs"
-              >
-                List your business
-              </Link>
+
+                {isAuthenticated ? (
+                  <>
+                    {isCustomer && (
+                      <Link
+                        to="/my-bookings"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block px-3 py-2.5 rounded-xl text-sm font-bold text-[#0F221A] hover:bg-white transition"
+                      >
+                        My Bookings & OTPs
+                        <span className="ml-2 text-xs font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                          ₹{user?.walletBalance || 0}
+                        </span>
+                      </Link>
+                    )}
+                    {isOwner && (
+                      <Link
+                        to="/owner/dashboard"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block px-3 py-2.5 rounded-xl text-sm font-bold text-[#0F221A] hover:bg-white transition"
+                      >
+                        Owner Dashboard
+                      </Link>
+                    )}
+                    {isAdmin && (
+                      <Link
+                        to="/admin/dashboard"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block px-3 py-2.5 rounded-xl text-sm font-bold text-[#0F221A] hover:bg-white transition"
+                      >
+                        Admin Hub
+                      </Link>
+                    )}
+                    <Link
+                      to="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-2.5 rounded-xl text-sm font-bold text-[#0F221A] hover:bg-white transition"
+                    >
+                      Profile ({user?.name})
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 transition"
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <div className="pt-4 mt-2 border-t border-[#e4e8e1] space-y-2">
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="btn-dark w-full justify-center text-xs"
+                    >
+                      Log In
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="btn-lime w-full justify-center text-xs"
+                    >
+                      List Your Studio
+                    </Link>
+                  </div>
+                )}
+              </nav>
             </div>
-          )}
+
+            {/* Bottom Verification Guarantee Card */}
+            <div className="p-3.5 rounded-2xl bg-[#0F221A] text-white text-xs space-y-1">
+              <p className="text-[#DDF279] font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                <ShieldCheck size={14} />
+                Partner Verification
+              </p>
+              <p className="text-white/70 text-[11px] leading-relaxed">
+                Every listed store is physically inspected with multi-photo & two-way OTP booking.
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </header>

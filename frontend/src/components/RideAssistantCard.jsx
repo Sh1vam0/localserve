@@ -1,5 +1,6 @@
 import React from 'react';
-import { Car, Navigation, ExternalLink, ShieldCheck, MapPin, Compass } from 'lucide-react';
+import { Car, Navigation, ExternalLink, ShieldCheck, MapPin, Compass, Copy } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { getUberDeepLink, getOlaDeepLink, getGoogleMapsDirectionsUrl, getEstimatedTravelTime } from '../utils/rideLinks';
 
 const RideAssistantCard = ({ business, distanceKm = null }) => {
@@ -33,6 +34,31 @@ const RideAssistantCard = ({ business, distanceKm = null }) => {
   });
 
   const travelTime = distanceKm ? getEstimatedTravelTime(distanceKm) : '10-15 mins';
+
+  // Full destination string for 1-tap clipboard copy
+  const destinationParts = [
+    business.name,
+    business.pinpointLocation?.landmark ? `Near ${business.pinpointLocation.landmark}` : null,
+    business.address?.street,
+    business.address?.city,
+  ].filter(Boolean);
+  const fullDestination = destinationParts.join(', ');
+
+  const handleRideClick = (e, url, providerName) => {
+    e.preventDefault();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(fullDestination).catch((err) => {
+        console.warn('Clipboard write failed:', err);
+      });
+    }
+    toast.success(`Address copied — paste in ${providerName}`, {
+      icon: '📋',
+      duration: 3500,
+    });
+    setTimeout(() => {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }, 350);
+  };
 
   return (
     <div className="rounded-[1.75rem] border border-[#e4e8e1] bg-white p-6 shadow-soft space-y-4">
@@ -82,28 +108,26 @@ const RideAssistantCard = ({ business, distanceKm = null }) => {
       {/* Ride Action Buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
         {/* Uber */}
-        <a
-          href={uberUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex items-center justify-center gap-2 rounded-2xl bg-[#000000] px-4 py-3 text-xs font-extrabold text-white shadow-xs hover:bg-[#222222] transition-all hover:scale-[1.02]"
+        <button
+          type="button"
+          onClick={(e) => handleRideClick(e, uberUrl, 'Uber')}
+          className="group flex items-center justify-center gap-2 rounded-2xl bg-[#000000] px-4 py-3 text-xs font-extrabold text-white shadow-xs hover:bg-[#222222] transition-all hover:scale-[1.02] cursor-pointer"
         >
           <span className="font-sans tracking-wide">UBER</span>
           <span className="text-[11px] font-normal text-white/80">Book Ride</span>
           <ExternalLink size={12} className="opacity-70 group-hover:opacity-100 transition-opacity" />
-        </a>
+        </button>
 
         {/* Ola */}
-        <a
-          href={olaUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex items-center justify-center gap-2 rounded-2xl bg-[#c5e840] px-4 py-3 text-xs font-extrabold text-[#17231d] shadow-xs hover:bg-[#b8dd30] transition-all hover:scale-[1.02]"
+        <button
+          type="button"
+          onClick={(e) => handleRideClick(e, olaUrl, 'Ola')}
+          className="group flex items-center justify-center gap-2 rounded-2xl bg-[#c5e840] px-4 py-3 text-xs font-extrabold text-[#17231d] shadow-xs hover:bg-[#b8dd30] transition-all hover:scale-[1.02] cursor-pointer"
         >
           <span>OLA</span>
           <span className="text-[11px] font-semibold text-[#17231d]/80">Book Cab</span>
           <ExternalLink size={12} className="opacity-70 group-hover:opacity-100 transition-opacity" />
-        </a>
+        </button>
 
         {/* Google Maps Directions */}
         <a
@@ -116,13 +140,6 @@ const RideAssistantCard = ({ business, distanceKm = null }) => {
           <span>Directions</span>
           <ExternalLink size={12} className="opacity-60 group-hover:opacity-100 text-[#6b756e]" />
         </a>
-      </div>
-
-      <div className="flex items-center justify-between text-[10px] text-[#6b756e] pt-1">
-        <span className="flex items-center gap-1">
-          <ShieldCheck size={12} className="text-[#2f6b4f]" />
-          Auto-fills pickup at your current GPS and sets drop-off destination
-        </span>
       </div>
     </div>
   );

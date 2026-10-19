@@ -181,21 +181,22 @@ const Home = () => {
   }, [businesses, search, category, maxPrice, minRating, sort, distanceRadius]);
 
   return (
-    <div className="space-y-10 pb-16">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-8 sm:space-y-10 pb-16">
       {/* NearNest Signature Hero Section */}
-      <section className="relative overflow-hidden rounded-[2rem] bg-[#2f6b4f] px-6 py-10 text-white sm:px-10 sm:py-14 lg:px-14 lg:py-16 shadow-lg">
-        {/* Subtle geometric background accents */}
-        <div className="absolute -right-16 -top-24 h-72 w-72 rounded-full border border-white/15 pointer-events-none" />
-        <div className="absolute -right-4 -top-12 h-52 w-52 rounded-full border border-white/15 pointer-events-none" />
-        <div className="absolute bottom-0 right-[18%] hidden h-40 w-40 rounded-full bg-[#d9f36a]/15 blur-2xl sm:block pointer-events-none" />
+      <section className="relative overflow-hidden rounded-2xl sm:rounded-[2rem] bg-[#0F221A] px-4 py-8 sm:px-10 sm:py-14 lg:px-14 lg:py-16 text-white shadow-xl">
+        {/* Architectural Radar Rings (Subtle Nod to GPS) */}
+        <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full border border-white/[0.06]" />
+        <div className="pointer-events-none absolute -top-10 -right-10 w-52 h-52 rounded-full border border-white/[0.05]" />
+        <div className="pointer-events-none absolute top-10 right-10 w-28 h-28 rounded-full border border-white/[0.04]" />
+        <div className="pointer-events-none absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#DDF279]/5 blur-2xl" />
 
         <div className="relative max-w-2xl">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-bold text-[#d9f36a] tracking-wide">
-            <Sparkles size={14} />
-            <span>LIVE GPS RECOMMENDATION ENGINE</span>
+          <div className="mb-4 sm:mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 sm:px-3.5 sm:py-1.5 text-[11px] sm:text-xs font-bold text-[#d9f36a] tracking-wide">
+            <Sparkles size={13} className="shrink-0" />
+            <span className="truncate">LIVE GPS RECOMMENDATION ENGINE</span>
           </div>
 
-          <h1 className="max-w-xl text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl text-white">
+          <h1 className="max-w-xl text-3xl font-extrabold leading-[1.12] tracking-tight sm:text-5xl lg:text-6xl text-white">
             Find your next{' '}
             <span className="font-serif italic font-normal text-[#d9f36a]">
               favourite
@@ -203,50 +204,125 @@ const Home = () => {
             local spot.
           </h1>
 
-          <p className="mt-5 max-w-lg text-sm sm:text-base leading-relaxed text-white/80 font-medium">
+          <p className="mt-3 sm:mt-5 max-w-lg text-xs sm:text-base leading-relaxed text-white/80 font-medium">
             Lock your live coordinates to see exact distances, verified partner stores, and instant slot availability.
           </p>
 
-          {/* Integrated Search & Live GPS Bar */}
-          <div className="mt-8 flex max-w-2xl flex-col gap-2 rounded-2xl bg-white p-2 shadow-soft sm:flex-row">
-            <div className="flex min-w-0 flex-1 items-center gap-3 px-3">
-              <Search className="shrink-0 text-[#2f6b4f]" size={20} />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className="w-full border-0 bg-transparent py-3 text-sm text-[#17231d] outline-none placeholder:text-[#6b756e]"
-                placeholder="Try “spa near me”, “salon”, “gym”, or “massage”..."
-              />
-            </div>
-
-            <div className="flex items-center gap-2 px-1">
-              {/* One-Click GPS Live Button */}
-              <button
-                type="button"
-                onClick={() => handleTriggerGPS()}
-                disabled={isDetectingGeo}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#e7eee6] hover:bg-[#d5e0d4] px-3.5 py-2.5 text-xs font-bold text-[#2f6b4f] transition-all shrink-0 shadow-xs"
-                title="Acquire live GPS coordinates from device"
-              >
-                <LocateFixed size={15} className={isDetectingGeo ? 'animate-spin text-[#2f6b4f]' : 'text-[#2f6b4f]'} />
-                <span>{isDetectingGeo ? 'Locating...' : 'Use Live Location'}</span>
-              </button>
-
-              <button
-                onClick={() =>
-                  document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' })
+          {/* SINGLE INTEGRATED SEARCH BAR */}
+          <div className="mt-6 sm:mt-8 relative flex items-center bg-white rounded-2xl p-1.5 shadow-md max-w-2xl">
+            <Search className="w-4 h-4 text-[#0F221A]/40 ml-3 mr-2 shrink-0" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
                 }
-                className="btn-lime justify-center text-xs"
-              >
-                <span>Explore</span>
-                <ArrowRight size={16} />
-              </button>
-            </div>
+              }}
+              placeholder="Search studio, massage, haircut..."
+              className="w-full text-xs sm:text-sm text-[#0F221A] placeholder-[#0F221A]/40 focus:outline-none bg-transparent py-2"
+            />
+            {/* Integrated GPS Trigger Icon */}
+            <button
+              type="button"
+              onClick={() => handleTriggerGPS()}
+              disabled={isDetectingGeo}
+              title="Use my current GPS location"
+              className="p-2 text-[#0F221A]/50 hover:text-[#0F221A] transition shrink-0"
+            >
+              <LocateFixed size={16} className={isDetectingGeo ? 'animate-spin text-emerald-600' : ''} />
+            </button>
+            <button
+              type="button"
+              onClick={() => document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' })}
+              className="bg-[#DDF279] text-[#0F221A] text-xs font-bold px-4 py-2.5 rounded-xl hover:brightness-95 transition shrink-0"
+            >
+              Search
+            </button>
+          </div>
+
+          {/* 3. UNIFIED 1.5PX CATEGORY ICONS (No Emojis, No repeated "Near Me") */}
+          <div className="grid grid-cols-4 gap-2 sm:gap-3 mt-6 max-w-2xl">
+            {/* Spas (Lotus Icon) */}
+            <button
+              type="button"
+              onClick={() => {
+                setCategory(category === 'Spa' ? 'All services' : 'Spa');
+                document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className={`group flex flex-col items-center justify-center py-3.5 px-2 rounded-2xl border transition active:scale-95 ${
+                category === 'Spa'
+                  ? 'bg-white/20 border-[#DDF279] ring-2 ring-[#DDF279]/30'
+                  : 'bg-white/[0.07] hover:bg-white/[0.14] border-white/[0.08]'
+              }`}
+            >
+              <svg className="w-5 h-5 text-[#DDF279] mb-1.5 group-hover:scale-110 transition" fill="none" stroke="currentColor" strokeWidth="1.4" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4C10 7.5 9 11 12 16c3-5 2-8.5 0-12z"/>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 16c-3.5-1-6.5-3.5-7.5-7.5 3.5.5 6 2.5 7.5 7.5z"/>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 16c3.5-1 6.5-3.5 7.5-7.5-3.5.5-6 2.5-7.5 7.5z"/>
+                <path strokeLinecap="round" d="M7 19h10"/>
+              </svg>
+              <span className="text-xs font-medium text-white/95">Spas</span>
+            </button>
+
+            {/* Salons (Minimalist Shears) */}
+            <button
+              type="button"
+              onClick={() => {
+                setCategory(category === 'Salon' ? 'All services' : 'Salon');
+                document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className={`group flex flex-col items-center justify-center py-3.5 px-2 rounded-2xl border transition active:scale-95 ${
+                category === 'Salon'
+                  ? 'bg-white/20 border-[#DDF279] ring-2 ring-[#DDF279]/30'
+                  : 'bg-white/[0.07] hover:bg-white/[0.14] border-white/[0.08]'
+              }`}
+            >
+              <svg className="w-5 h-5 text-[#DDF279] mb-1.5 group-hover:scale-110 transition" fill="none" stroke="currentColor" strokeWidth="1.4" viewBox="0 0 24 24">
+                <circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/>
+                <path strokeLinecap="round" d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/>
+              </svg>
+              <span className="text-xs font-medium text-white/95">Salons</span>
+            </button>
+
+            {/* Gyms (Minimalist Dumbbell) */}
+            <button
+              type="button"
+              onClick={() => {
+                setCategory(category === 'Gym' ? 'All services' : 'Gym');
+                document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className={`group flex flex-col items-center justify-center py-3.5 px-2 rounded-2xl border transition active:scale-95 ${
+                category === 'Gym'
+                  ? 'bg-white/20 border-[#DDF279] ring-2 ring-[#DDF279]/30'
+                  : 'bg-white/[0.07] hover:bg-white/[0.14] border-white/[0.08]'
+              }`}
+            >
+              <svg className="w-5 h-5 text-[#DDF279] mb-1.5 group-hover:scale-110 transition" fill="none" stroke="currentColor" strokeWidth="1.4" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>
+              </svg>
+              <span className="text-xs font-medium text-white/95">Gyms</span>
+            </button>
+
+            {/* Parlours (Refined Sparkle) */}
+            <button
+              type="button"
+              onClick={() => {
+                setCategory(category === 'Beauty' ? 'All services' : 'Beauty');
+                document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className={`group flex flex-col items-center justify-center py-3.5 px-2 rounded-2xl border transition active:scale-95 ${
+                category === 'Beauty'
+                  ? 'bg-white/20 border-[#DDF279] ring-2 ring-[#DDF279]/30'
+                  : 'bg-white/[0.07] hover:bg-white/[0.14] border-white/[0.08]'
+              }`}
+            >
+              <svg className="w-5 h-5 text-[#DDF279] mb-1.5 group-hover:scale-110 transition" fill="none" stroke="currentColor" strokeWidth="1.4" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l1.8 5.4a2 2 0 001.3 1.3L20.5 11.5l-5.4 1.8a2 2 0 00-1.3 1.3L12 20l-1.8-5.4a2 2 0 00-1.3-1.3L3.5 11.5l5.4-1.8a2 2 0 001.3-1.3L12 3z"/>
+              </svg>
+              <span className="text-xs font-medium text-white/95">Parlours</span>
+            </button>
           </div>
 
           {/* Live Location Radar Telemetry Banner */}
@@ -257,7 +333,7 @@ const Home = () => {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#d9f36a] opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-[#d9f36a]"></span>
                 </span>
-                <span className="font-bold text-[#d9f36a]">Live GPS Position:</span>
+                <span className="font-bold text-[#d9f36a]">Active Location:</span>
                 <span className="text-white font-medium">{userGeoLocation.city}</span>
                 <span className="text-white/60 font-mono text-[11px]">
                   ({userGeoLocation.lat.toFixed(3)}°N, {userGeoLocation.lng.toFixed(3)}°E)
@@ -290,67 +366,27 @@ const Home = () => {
             </div>
           )}
 
-          {/* Quick Search Chips: Near Me, Cities */}
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-bold text-white/70">Quick Near Me:</span>
-            <button
-              onClick={() => handleQuickChip('spa_near_me')}
-              className="inline-flex items-center gap-1 rounded-full bg-white/15 hover:bg-white/25 px-3 py-1 text-xs font-bold text-white transition-all backdrop-blur-xs"
-            >
-              <span>💆</span> Spas Near Me
-            </button>
-            <button
-              onClick={() => handleQuickChip('salon_near_me')}
-              className="inline-flex items-center gap-1 rounded-full bg-white/15 hover:bg-white/25 px-3 py-1 text-xs font-bold text-white transition-all backdrop-blur-xs"
-            >
-              <span>✂</span> Salons Near Me
-            </button>
-            <button
-              onClick={() => handleQuickChip('gym_near_me')}
-              className="inline-flex items-center gap-1 rounded-full bg-white/15 hover:bg-white/25 px-3 py-1 text-xs font-bold text-white transition-all backdrop-blur-xs"
-            >
-              <span>💪</span> Gyms Near Me
-            </button>
-            <button
-              onClick={() => handleQuickChip('parlour_near_me')}
-              className="inline-flex items-center gap-1 rounded-full bg-white/15 hover:bg-white/25 px-3 py-1 text-xs font-bold text-white transition-all backdrop-blur-xs"
-            >
-              <span>✦</span> Parlours Near Me
-            </button>
-            <button
-              onClick={() => handleQuickChip('noida')}
-              className="inline-flex items-center gap-1 rounded-full bg-white/15 hover:bg-white/25 px-3 py-1 text-xs font-bold text-[#d9f36a] transition-all backdrop-blur-xs"
-            >
-              <span>📍</span> Noida Sec 18
-            </button>
-            <button
-              onClick={() => handleQuickChip('greater_noida')}
-              className="inline-flex items-center gap-1 rounded-full bg-white/15 hover:bg-white/25 px-3 py-1 text-xs font-bold text-[#d9f36a] transition-all backdrop-blur-xs"
-            >
-              <span>📍</span> Greater Noida
-            </button>
-            <button
-              onClick={() => handleQuickChip('mumbai')}
-              className="inline-flex items-center gap-1 rounded-full bg-white/15 hover:bg-white/25 px-3 py-1 text-xs font-bold text-white transition-all backdrop-blur-xs"
-            >
-              <span>📍</span> Mumbai
-            </button>
-          </div>
+          {/* 4. MINIMALIST ARCHITECTURAL TRUST CARD */}
+          <div className="mt-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 p-3.5 shadow-sm max-w-2xl">
+            <div className="grid grid-cols-3 divide-x divide-white/15 text-center">
+              <div className="px-2 flex flex-col items-center">
+                <ShieldCheck size={16} className="text-[#DDF279] mb-1" />
+                <p className="text-[11px] font-bold text-white leading-tight">Two-Way OTP</p>
+                <p className="text-[10px] text-white/60 mt-0.5">Verified Entry</p>
+              </div>
 
-          {/* Trust Guarantees */}
-          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs font-semibold text-white/80">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck size={15} className="text-[#d9f36a]" />
-              Two-Way OTP Verification
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CalendarCheck size={15} className="text-[#d9f36a]" />
-              Zero Double-Booking
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Heart size={15} className="text-[#d9f36a]" />
-              Verified Multi-Photo Stores
-            </span>
+              <div className="px-2 flex flex-col items-center">
+                <CalendarCheck size={16} className="text-[#DDF279] mb-1" />
+                <p className="text-[11px] font-bold text-white leading-tight">Zero Double-Book</p>
+                <p className="text-[10px] text-white/60 mt-0.5">Live Slot Lock</p>
+              </div>
+
+              <div className="px-2 flex flex-col items-center">
+                <Heart size={16} className="text-[#DDF279] mb-1" />
+                <p className="text-[11px] font-bold text-white leading-tight">Multi-Photo</p>
+                <p className="text-[10px] text-white/60 mt-0.5">Inspected Stores</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -390,34 +426,37 @@ const Home = () => {
       )}
 
       {/* Category Pills Bar */}
-      <section className="pt-2">
-        <div className="mb-4 flex items-end justify-between">
+      <section className="pt-1 sm:pt-2">
+        <div className="mb-3 sm:mb-4 flex items-end justify-between">
           <div>
             <p className="eyebrow">A LITTLE OF EVERYTHING</p>
             <h2 className="section-title mt-1 text-[#17231d]">What are you in the mood for?</h2>
           </div>
           <span className="hidden text-xs font-bold text-[#6b756e] sm:block">
-            Pick a category to get started
+            Swipe to explore all categories
           </span>
         </div>
 
-        <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
-          {categories.map((c) => (
-            <button
-              key={c.name}
-              onClick={() => setCategory(c.name)}
-              className={`category-pill ${category === c.name ? 'category-selected' : ''}`}
-            >
-              <span className="text-base">{c.emoji}</span>
-              <span>{c.name}</span>
-            </button>
-          ))}
+        {/* Scrollable category container with touch momentum & scroll snap */}
+        <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex gap-2.5 overflow-x-auto pb-3 pt-1 no-scrollbar scroll-smooth snap-x snap-mandatory">
+            {categories.map((c) => (
+              <button
+                key={c.name}
+                onClick={() => setCategory(c.name)}
+                className={`category-pill shrink-0 snap-start ${category === c.name ? 'category-selected' : ''}`}
+              >
+                <span className="text-base">{c.emoji}</span>
+                <span className="whitespace-nowrap">{c.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Results Section */}
       <section id="results" className="scroll-mt-24 pb-4">
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-6 flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="eyebrow">GOOD PLACES, CLOSE BY</p>
             <h2 className="section-title mt-1 text-[#17231d]">
@@ -425,10 +464,10 @@ const Home = () => {
             </h2>
           </div>
 
-          {/* Filter Selects */}
-          <div className="flex flex-wrap gap-2">
+          {/* Filter Selects: Clean 3-column equal grid on mobile, flex row on tablet/desktop */}
+          <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 w-full lg:w-auto">
             <select
-              className="filter-select"
+              className="filter-select w-full sm:w-auto text-[11px] sm:text-xs px-2 sm:px-3 py-2 text-center sm:text-left"
               value={maxPrice}
               onChange={(e) => setMaxPrice(e.target.value)}
               aria-label="Filter by price"
@@ -440,7 +479,7 @@ const Home = () => {
             </select>
 
             <select
-              className="filter-select"
+              className="filter-select w-full sm:w-auto text-[11px] sm:text-xs px-2 sm:px-3 py-2 text-center sm:text-left"
               value={minRating}
               onChange={(e) => setMinRating(e.target.value)}
               aria-label="Filter by rating"
@@ -451,7 +490,7 @@ const Home = () => {
             </select>
 
             <select
-              className="filter-select"
+              className="filter-select w-full sm:w-auto text-[11px] sm:text-xs px-2 sm:px-3 py-2 text-center sm:text-left"
               value={sort}
               onChange={(e) => setSort(e.target.value)}
               aria-label="Sort results"

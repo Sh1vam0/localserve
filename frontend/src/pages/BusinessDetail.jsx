@@ -27,7 +27,15 @@ import {
   X,
   Globe,
   Award,
-  Sparkles
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Building2,
+  Info,
+  MessageSquare,
+  Phone,
+  Mail
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -65,6 +73,14 @@ const BusinessDetail = () => {
   const [couponCodeInput, setCouponCodeInput] = useState('');
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+
+  // Photo Carousel Swipe & Drag State
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchEndX, setTouchEndX] = useState(null);
+  const [mouseDownX, setMouseDownX] = useState(null);
+
+  // Business Details Expandable Drawer State
+  const [showBusinessDetails, setShowBusinessDetails] = useState(false);
 
   const fetchBusinessData = async () => {
     try {
@@ -136,6 +152,121 @@ const BusinessDetail = () => {
       : [categoryImages[business.category] || categoryImages.salon];
 
   const currentImageUrl = allImages[activePhotoIndex] || allImages[0];
+
+  const categoryDefaultAmenities = {
+    salon: [
+      'Air Conditioned',
+      'Sanitized Tools & Capes',
+      'Master Hair Stylists',
+      'Card & UPI Accepted',
+      'Beverage Service',
+      'Valet Parking Available',
+    ],
+    spa: [
+      'Private Therapy Suites',
+      'Steam & Aromatherapy',
+      'Organic Herbal Oils',
+      'Certified Therapists',
+      'Complimentary Herbal Tea',
+      'Valet Parking Available',
+    ],
+    gym: [
+      'CrossFit Arena',
+      'Certified Personal Trainers',
+      'Steam & Shower Rooms',
+      'Cardio & Free Weights',
+      'High-Speed Wi-Fi',
+      'Locker Facility',
+    ],
+    parlour: [
+      'Bridal Dressing Suite',
+      'HD Airbrush Equipment',
+      'Hygiene First Protocol',
+      'Single-Use Kits',
+      'Card & UPI Accepted',
+      'Refreshment Lounge',
+    ],
+    wellness: [
+      'Sound Bath Acoustics',
+      'Organic Essential Oils',
+      'Meditation Cushions',
+      'Certified Practitioners',
+      'Complimentary Detox Tea',
+      'Calm Ambient Atmosphere',
+    ],
+  };
+
+  const amenitiesList =
+    business.amenities && business.amenities.length > 0
+      ? business.amenities
+      : (categoryDefaultAmenities[business.category] || [
+          'Air Conditioned',
+          'Sanitized Equipment',
+          'Free Wi-Fi',
+          'Card & UPI Accepted',
+          'Valet Parking Available',
+        ]);
+
+  const ownerNoteText =
+    business.ownerNote ||
+    business.rideNotes ||
+    'Welcome to our verified establishment! We take hygiene, punctual service, and customer satisfaction seriously. Please arrive 5–10 minutes prior to your scheduled slot for seamless check-in.';
+
+  const nextPhoto = () => {
+    if (allImages.length <= 1) return;
+    setActivePhotoIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const prevPhoto = () => {
+    if (allImages.length <= 1) return;
+    setActivePhotoIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  // Touch Swipe for Mobile
+  const onTouchStart = (e) => {
+    setTouchEndX(null);
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartX || !touchEndX) return;
+    const distance = touchStartX - touchEndX;
+    if (distance > 45) {
+      nextPhoto();
+    } else if (distance < -45) {
+      prevPhoto();
+    }
+    setTouchStartX(null);
+    setTouchEndX(null);
+  };
+
+  // Mouse Drag / Swipe for PC
+  const onMouseDown = (e) => {
+    setMouseDownX(e.clientX);
+  };
+  const onMouseUp = (e) => {
+    if (mouseDownX === null) return;
+    const distance = mouseDownX - e.clientX;
+    if (distance > 50) {
+      nextPhoto();
+    } else if (distance < -50) {
+      prevPhoto();
+    }
+    setMouseDownX(null);
+  };
+
+  const handleSelectService = (serviceId) => {
+    setSelectedServiceId(serviceId);
+    setSlot('');
+    const bookingCard = document.getElementById('booking-card');
+    if (bookingCard) {
+      bookingCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const bLng = business.location?.coordinates?.[0] || 72.8777;
   const bLat = business.location?.coordinates?.[1] || 19.076;
@@ -230,23 +361,82 @@ const BusinessDetail = () => {
       <div className="grid gap-8 lg:grid-cols-[1.1fr_.9fr]">
         {/* Left Column: Photos, Badges, Details & About */}
         <div className="space-y-6">
-          {/* Main Showcase Photo */}
-          <div className="relative overflow-hidden rounded-[1.75rem] shadow-sm bg-neutral-900">
+          {/* Main Showcase Photo Carousel (Touch Swipe for Mobile & Mouse Drag / Arrows for PC) */}
+          <div 
+            className="group relative overflow-hidden rounded-[1.75rem] shadow-sm bg-neutral-900 select-none cursor-grab active:cursor-grabbing"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            onMouseDown={onMouseDown}
+            onMouseUp={onMouseUp}
+            onMouseLeave={() => setMouseDownX(null)}
+          >
             <img
               src={currentImageUrl}
               alt={business.name}
-              className="h-72 w-full object-cover sm:h-[420px] transition-all duration-300"
+              draggable={false}
+              className="h-72 w-full object-cover sm:h-[420px] transition-all duration-300 pointer-events-none"
             />
 
             {/* Verified Store Badge */}
             {business.verificationStatus === 'verified' && (
-              <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-600/90 backdrop-blur-xs text-white px-3.5 py-1.5 text-xs font-extrabold shadow-md">
+              <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-600/90 backdrop-blur-xs text-white px-3.5 py-1.5 text-xs font-extrabold shadow-md pointer-events-none">
                 <ShieldCheck size={14} />
                 <span>Verified Partner Store</span>
               </div>
             )}
 
-            <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-xs text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
+            {/* PC Navigation Chevron Left */}
+            {allImages.length > 1 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevPhoto();
+                }}
+                aria-label="Previous photo"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/55 hover:bg-black/85 backdrop-blur-md text-white flex items-center justify-center transition-all opacity-85 sm:opacity-0 sm:group-hover:opacity-100 shadow-lg focus:outline-none"
+              >
+                <ChevronLeft size={22} />
+              </button>
+            )}
+
+            {/* PC Navigation Chevron Right */}
+            {allImages.length > 1 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextPhoto();
+                }}
+                aria-label="Next photo"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/55 hover:bg-black/85 backdrop-blur-md text-white flex items-center justify-center transition-all opacity-85 sm:opacity-0 sm:group-hover:opacity-100 shadow-lg focus:outline-none"
+              >
+                <ChevronRight size={22} />
+              </button>
+            )}
+
+            {/* Indicator Dots */}
+            {allImages.length > 1 && (
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/45 backdrop-blur-xs">
+                {allImages.map((_, dotIdx) => (
+                  <button
+                    key={dotIdx}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActivePhotoIndex(dotIdx);
+                    }}
+                    className={`rounded-full transition-all ${
+                      activePhotoIndex === dotIdx ? 'w-5 h-1.5 bg-[#DCF078]' : 'w-1.5 h-1.5 bg-white/60 hover:bg-white'
+                    }`}
+                    aria-label={`Jump to photo ${dotIdx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-xs text-white text-[11px] font-semibold px-2.5 py-1 rounded-full pointer-events-none">
               Photo {activePhotoIndex + 1} of {allImages.length}
             </div>
           </div>
@@ -305,13 +495,127 @@ const BusinessDetail = () => {
             {business.description || 'Welcome to our verified center. We are committed to hygiene, punctuality, and excellent service.'}
           </p>
 
+          {/* Services Offered Section (Directly Below Business Name & Description) */}
+          <div className="rounded-[1.75rem] border border-[#e4e8e1] bg-white p-6 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#f0f3ee] pb-4">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#2f6b4f] bg-[#e7eee6] px-2.5 py-1 rounded-full">
+                  Services Menu
+                </span>
+                <h2 className="text-lg font-extrabold text-[#17231d] mt-1.5">
+                  Services offered by {business.name}
+                </h2>
+              </div>
+              <span className="text-xs font-semibold text-[#6b756e] bg-[#f8faf7] px-3 py-1.5 rounded-full border border-[#e4e8e1] self-start sm:self-auto">
+                {(business.services || []).length} available
+              </span>
+            </div>
+
+            {(business.services || []).length === 0 ? (
+              <p className="text-xs text-[#6b756e] py-4 text-center">
+                No services currently listed. Please contact the business directly.
+              </p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {business.services.map((s) => {
+                  const isSelected = selectedServiceId === s._id;
+                  return (
+                    <div
+                      key={s._id}
+                      onClick={() => handleSelectService(s._id)}
+                      className={`group relative flex flex-col justify-between rounded-2xl border p-4 transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-[#2f6b4f] bg-[#f2f7ef] shadow-sm ring-1 ring-[#2f6b4f]'
+                          : 'border-[#e4e8e1] bg-white hover:border-[#2f6b4f]/60 hover:shadow-xs'
+                      }`}
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-bold text-sm text-[#17231d] group-hover:text-[#2f6b4f] transition-colors">
+                            {s.name}
+                          </h3>
+                          {isSelected && (
+                            <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-[#2f6b4f] bg-[#e7eee6] px-2 py-0.5 rounded-full">
+                              <CheckCircle2 size={11} /> Selected
+                            </span>
+                          )}
+                        </div>
+
+                        {s.description && (
+                          <p className="text-xs text-[#6b756e] line-clamp-2 leading-relaxed">
+                            {s.description}
+                          </p>
+                        )}
+
+                        <div className="flex items-center gap-3 text-[11px] text-[#6b756e] pt-1">
+                          <span className="inline-flex items-center gap-1">
+                            <Clock3 size={12} className="text-[#2f6b4f]" />
+                            {s.duration || 30} mins
+                          </span>
+                          {s.category && (
+                            <span className="text-[#404c44] bg-[#f0f3ee] px-2 py-0.5 rounded-md font-medium">
+                              {s.category}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-[#e4e8e1]/60 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-[#6b756e] block leading-none">Price</span>
+                          <span className="text-base font-extrabold text-[#17231d]">₹{s.price}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectService(s._id);
+                          }}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                            isSelected
+                              ? 'bg-[#2f6b4f] text-white shadow-xs'
+                              : 'bg-[#f0f3ee] text-[#17231d] group-hover:bg-[#2f6b4f] group-hover:text-white'
+                          }`}
+                        >
+                          {isSelected ? 'Selected' : 'Book Service'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* About this place & Pinpoint Location */}
           <div className="rounded-[1.5rem] border border-[#e4e8e1] bg-white p-6 space-y-4 shadow-xs">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-[#17231d]">About this place & Pinpoint</h2>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                GPS Verified
-              </span>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-base font-extrabold text-[#17231d]">About this place & Pinpoint</h2>
+                <p className="text-xs text-[#6b756e] mt-0.5">Verified establishment address & store profile</p>
+              </div>
+
+              {/* Top-Right Corner: GPS Verified Badge + Business Details Toggle */}
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">
+                  GPS Verified
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowBusinessDetails((prev) => !prev)}
+                  aria-expanded={showBusinessDetails}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2f6b4f] hover:text-[#1d4331] bg-[#e7eee6]/70 hover:bg-[#e7eee6] px-3 py-1.5 rounded-xl transition-all shadow-2xs border border-[#2f6b4f]/20 cursor-pointer"
+                >
+                  <Building2 size={13} className="text-[#2f6b4f]" />
+                  <span>Business Details</span>
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform duration-300 ${
+                      showBusinessDetails ? 'rotate-180 text-[#17231d]' : ''
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2.5">
@@ -333,13 +637,6 @@ const BusinessDetail = () => {
                 <Clock3 size={16} className="mt-0.5 shrink-0 text-[#2f6b4f]" />
                 <span>Open: 9:00 AM – 8:00 PM (Monday to Saturday)</span>
               </p>
-
-              {business.verificationDocuments?.gstin && (
-                <p className="flex items-start gap-2.5 text-xs leading-5 text-[#404c44]">
-                  <BadgeCheck size={16} className="mt-0.5 shrink-0 text-emerald-600" />
-                  <span>Licensed Establishment (GSTIN: {business.verificationDocuments.gstin})</span>
-                </p>
-              )}
             </div>
 
             {/* Direct Open in Google Maps Button */}
@@ -365,6 +662,81 @@ const BusinessDetail = () => {
                 <ExternalLink size={12} />
               </a>
             </div>
+
+            {/* Smoothly Expandable Business Details Drawer / Section */}
+            {showBusinessDetails && (
+              <div className="pt-4 border-t border-[#e4e8e1] space-y-4 animate-fadeIn transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-[#2f6b4f]"></span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#2f6b4f]">
+                      Owner-Verified Store Profile
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-[#6b756e] bg-[#f8faf7] px-2.5 py-0.5 rounded-full border border-[#e4e8e1]">
+                    Live Store Data
+                  </span>
+                </div>
+
+                {/* 1. Store Description */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#17231d]">
+                    <Info size={13} className="text-[#2f6b4f]" />
+                    <span>Store Description:</span>
+                  </div>
+                  <p className="text-xs leading-relaxed text-[#404c44] bg-[#f8faf7] p-3.5 rounded-2xl border border-[#e4e8e1]/70">
+                    {business.description || 'Welcome to our verified center. We are committed to hygiene, punctuality, and excellent service.'}
+                  </p>
+                </div>
+
+                {/* 2. Highlights & Amenities Chips */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#17231d]">
+                    <Sparkles size={13} className="text-[#2f6b4f]" />
+                    <span>Highlights & Amenities:</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {amenitiesList.map((chip, cIdx) => (
+                      <span
+                        key={cIdx}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#f0f5ee] border border-[#d6e3d2] text-xs font-semibold text-[#1f4733] shadow-2xs"
+                      >
+                        <CheckCircle2 size={12} className="text-[#2f6b4f]" />
+                        <span>{chip}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Owner's Note to Guests */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#17231d]">
+                    <MessageSquare size={13} className="text-[#2f6b4f]" />
+                    <span>Owner's Note to Guests:</span>
+                  </div>
+                  <div className="rounded-2xl bg-[#fffdf5] p-3.5 border border-[#f1e6bf] text-xs space-y-2 text-[#5c4a16]">
+                    <p className="leading-relaxed italic">
+                      "{ownerNoteText}"
+                    </p>
+                    <div className="pt-2 border-t border-[#f1e6bf]/60 flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#17231d]">
+                        <ShieldCheck size={13} className="text-emerald-600" />
+                        <span>{business.owner?.name ? `${business.owner.name} (Store Host)` : 'Verified Store Host'}</span>
+                      </span>
+                      {business.phone && (
+                        <a
+                          href={`tel:${business.phone}`}
+                          className="text-[11px] font-bold text-[#2f6b4f] hover:underline flex items-center gap-1"
+                        >
+                          <Phone size={11} />
+                          <span>{business.phone}</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Ride / Commute Assistance with Uber & Ola */}
@@ -374,7 +746,7 @@ const BusinessDetail = () => {
         </div>
 
         {/* Right Column: NearNest Interactive Booking Card */}
-        <aside className="h-fit rounded-[1.75rem] border border-[#e4e8e1] bg-white p-6 shadow-soft space-y-5">
+        <aside id="booking-card" className="h-fit rounded-[1.75rem] border border-[#e4e8e1] bg-white p-6 shadow-soft space-y-5 scroll-mt-24">
           <div>
             <p className="eyebrow">MAKE IT YOURS</p>
             <h2 className="mt-1 text-2xl font-extrabold text-[#17231d]">Book a service</h2>

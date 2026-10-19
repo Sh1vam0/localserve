@@ -70,7 +70,16 @@ export const updateService = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Not authorized to update this service' });
     }
 
-    service = await Service.findByIdAndUpdate(req.params.id, req.body, {
+    // Prevent mass assignment: only allow specific safe service attributes to be updated
+    const allowedFields = ['name', 'description', 'price', 'duration', 'category', 'isActive'];
+    const updateData = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    }
+
+    service = await Service.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });

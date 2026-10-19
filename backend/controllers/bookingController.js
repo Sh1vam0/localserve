@@ -205,10 +205,25 @@ export const verifyCheckin = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Unauthorized: Only the host business owner can verify arrival OTP' });
     }
 
-    if (booking.checkinOTP !== String(otp).trim()) {
-      return res.status(400).json({ success: false, message: 'Invalid check-in code. Please check with customer.' });
+    // Brute-force protection: Lockout after 5 failed attempts
+    if ((booking.failedCheckinAttempts || 0) >= 5) {
+      return res.status(429).json({
+        success: false,
+        message: 'Security lockout: Maximum OTP verification attempts exceeded (5/5). Please contact support.',
+      });
     }
 
+    if (booking.checkinOTP !== String(otp).trim()) {
+      booking.failedCheckinAttempts = (booking.failedCheckinAttempts || 0) + 1;
+      await booking.save();
+      const remaining = 5 - booking.failedCheckinAttempts;
+      return res.status(400).json({
+        success: false,
+        message: `Invalid check-in code. ${remaining > 0 ? `${remaining} attempt(s) remaining.` : 'Account locked.'}`,
+      });
+    }
+
+    booking.failedCheckinAttempts = 0;
     booking.status = 'checked-in';
     booking.checkedInAt = new Date();
     await booking.save();
@@ -248,10 +263,25 @@ export const verifyCompletion = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Unauthorized: Only the appointment customer can confirm service delivery' });
     }
 
-    if (booking.completionOTP !== String(otp).trim()) {
-      return res.status(400).json({ success: false, message: 'Invalid completion code. Ask service provider.' });
+    // Brute-force protection: Lockout after 5 failed attempts
+    if ((booking.failedCompletionAttempts || 0) >= 5) {
+      return res.status(429).json({
+        success: false,
+        message: 'Security lockout: Maximum completion OTP verification attempts exceeded (5/5). Please contact support.',
+      });
     }
 
+    if (booking.completionOTP !== String(otp).trim()) {
+      booking.failedCompletionAttempts = (booking.failedCompletionAttempts || 0) + 1;
+      await booking.save();
+      const remaining = 5 - booking.failedCompletionAttempts;
+      return res.status(400).json({
+        success: false,
+        message: `Invalid completion code. ${remaining > 0 ? `${remaining} attempt(s) remaining.` : 'Code locked.'}`,
+      });
+    }
+
+    booking.failedCompletionAttempts = 0;
     booking.status = 'completed';
     booking.completedAt = new Date();
     booking.isVerified = true;

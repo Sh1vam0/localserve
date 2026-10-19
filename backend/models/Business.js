@@ -32,6 +32,14 @@ const BusinessSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    amenities: {
+      type: [String],
+      default: [],
+    },
+    ownerNote: {
+      type: String,
+      default: '',
+    },
     phone: {
       type: String,
       default: '',

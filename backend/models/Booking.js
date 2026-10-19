@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 
 const BookingSchema = new mongoose.Schema(
   {
@@ -36,11 +37,19 @@ const BookingSchema = new mongoose.Schema(
     },
     checkinOTP: {
       type: String, // 4 digit string shown to customer
-      default: () => Math.floor(1000 + Math.random() * 9000).toString(),
+      default: () => crypto.randomInt(1000, 10000).toString(),
     },
     completionOTP: {
       type: String, // 4 digit string generated when business starts or prepares completion
-      default: () => Math.floor(1000 + Math.random() * 9000).toString(),
+      default: () => crypto.randomInt(1000, 10000).toString(),
+    },
+    failedCheckinAttempts: {
+      type: Number,
+      default: 0,
+    },
+    failedCompletionAttempts: {
+      type: Number,
+      default: 0,
     },
     checkedInAt: {
       type: Date,

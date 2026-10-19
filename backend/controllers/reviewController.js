@@ -66,13 +66,31 @@ export const createReview = async (req, res, next) => {
       }
     }
 
+    // Validate rating range strictly between 1 and 5
+    const numericRating = Math.max(1, Math.min(5, Math.round(Number(rating))));
+    if (isNaN(numericRating)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid rating number between 1 and 5' });
+    }
+
+    // Prevent duplicate review spamming: each customer can submit one review per business
+    const existingReview = await Review.findOne({
+      customer: req.user.id,
+      business: businessId,
+    });
+    if (existingReview) {
+      return res.status(400).json({
+        success: false,
+        message: 'You have already reviewed this business. You can update your existing review instead.',
+      });
+    }
+
     const review = await Review.create({
       customer: req.user.id,
       business: businessId,
       booking: validBookingId,
-      rating: Number(rating),
-      comment,
-      tags: tags || [],
+      rating: numericRating,
+      comment: String(comment).trim(),
+      tags: Array.isArray(tags) ? tags : [],
       isVerified,
     });
 

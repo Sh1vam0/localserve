@@ -184,64 +184,79 @@ const seedGoogleReviewsByCategory = {
 
 const autoSeed = async () => {
   try {
-    const userCount = await User.countDocuments();
-    let owner1, owner2, owner3, ownerNCR;
-    let customer1, customer2;
+    let owner1 = await User.findOne({ email: 'owner1@localserv.com' });
+    let owner2 = await User.findOne({ email: 'owner2@localserv.com' });
+    let owner3 = await User.findOne({ email: 'owner3@localserv.com' });
+    let ownerNCR = await User.findOne({ email: 'owner.ncr@localserv.com' });
 
-    if (userCount === 0) {
-      console.log('🌱 Populating database with rich demo data...');
+    if (!owner1 || !owner2 || !owner3 || !ownerNCR) {
+      console.log('🌱 Populating database with rich demo users...');
 
-      // 1. Root Super Admin
-      await User.create({
-        name: 'Sh1vam',
-        username: 'sh1vam',
-        email: 'admin@localserve.com',
-        password: 'Sh1vam@admin',
-        phone: '+91 99999 88888',
-        role: 'admin',
-        isSuperAdmin: true,
-        adminPermissions: {
-          canVerifyBusinesses: true,
-          canManageUsers: true,
-          canManageBookings: true,
-          canManageAdmins: true,
-        },
-      });
+      // 1. Root Super Admin (if not present)
+      const adminExists = await User.findOne({ role: 'admin' });
+      if (!adminExists) {
+        await User.create({
+          name: 'Sh1vam',
+          username: 'sh1vam',
+          email: 'admin@localserve.com',
+          password: 'Sh1vam@admin',
+          phone: '+91 99999 88888',
+          role: 'admin',
+          isSuperAdmin: true,
+          adminPermissions: {
+            canVerifyBusinesses: true,
+            canManageUsers: true,
+            canManageBookings: true,
+            canManageAdmins: true,
+          },
+        });
+      }
 
       // 2. Owners
-      owner1 = await User.create({
-        name: 'Vikram Malhotra',
-        email: 'owner1@localserv.com',
-        password: 'password123',
-        phone: '+91 98201 22334',
-        role: 'owner',
-      });
+      if (!owner1) {
+        owner1 = await User.create({
+          name: 'Vikram Malhotra',
+          email: 'owner1@localserv.com',
+          password: 'password123',
+          phone: '+91 98201 22334',
+          role: 'owner',
+        });
+      }
 
-      owner2 = await User.create({
-        name: 'Ananya Sharma',
-        email: 'owner2@localserv.com',
-        password: 'password123',
-        phone: '+91 98202 33445',
-        role: 'owner',
-      });
+      if (!owner2) {
+        owner2 = await User.create({
+          name: 'Ananya Sharma',
+          email: 'owner2@localserv.com',
+          password: 'password123',
+          phone: '+91 98202 33445',
+          role: 'owner',
+        });
+      }
 
-      owner3 = await User.create({
-        name: 'Rajesh Kulkarni',
-        email: 'owner3@localserv.com',
-        password: 'password123',
-        phone: '+91 98203 44556',
-        role: 'owner',
-      });
+      if (!owner3) {
+        owner3 = await User.create({
+          name: 'Rajesh Kulkarni',
+          email: 'owner3@localserv.com',
+          password: 'password123',
+          phone: '+91 98203 44556',
+          role: 'owner',
+        });
+      }
 
-      ownerNCR = await User.create({
-        name: 'Rohit Bansal',
-        email: 'owner.ncr@localserv.com',
-        password: 'password123',
-        phone: '+91 98110 99887',
-        role: 'owner',
-      });
+      if (!ownerNCR) {
+        ownerNCR = await User.create({
+          name: 'Rohit Bansal',
+          email: 'owner.ncr@localserv.com',
+          password: 'password123',
+          phone: '+91 98110 99887',
+          role: 'owner',
+        });
+      }
+    }
 
-      // 3. Customers
+    // 3. Customers
+    let customer1 = await User.findOne({ email: 'rahul@test.com' });
+    if (!customer1) {
       customer1 = await User.create({
         name: 'Rahul Verma',
         email: 'rahul@test.com',
@@ -253,7 +268,10 @@ const autoSeed = async () => {
           { amount: 300, type: 'credit', reason: 'Refund for cancelled booking #9821' },
         ],
       });
+    }
 
+    let customer2 = await User.findOne({ email: 'priya@test.com' });
+    if (!customer2) {
       customer2 = await User.create({
         name: 'Priya Patel',
         email: 'priya@test.com',
@@ -262,7 +280,10 @@ const autoSeed = async () => {
         role: 'customer',
         walletBalance: 0,
       });
+    }
 
+    const amitCustomer = await User.findOne({ email: 'amit@test.com' });
+    if (!amitCustomer) {
       await User.create({
         name: 'Amit Deshmukh',
         email: 'amit@test.com',
@@ -274,13 +295,6 @@ const autoSeed = async () => {
           { amount: 150, type: 'credit', reason: 'Promotional welcome credit' },
         ],
       });
-    } else {
-      owner1 = await User.findOne({ role: 'owner' });
-      owner2 = owner1;
-      owner3 = owner1;
-      ownerNCR = owner1;
-      customer1 = await User.findOne({ role: 'customer' });
-      customer2 = customer1;
     }
 
     // Helper to seed coupons with active time frames if not already present

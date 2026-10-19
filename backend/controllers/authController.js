@@ -6,7 +6,10 @@ import { recordAuditLog } from '../utils/auditLogger.js';
 // @access  Public
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, phone, role, username } = req.body;
+    const { name, email, password, phone, role, username } = req.body || {};
+    if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ success: false, message: 'Please provide valid text for name, email, and password' });
+    }
 
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'Please provide name, email, and password' });
@@ -80,10 +83,11 @@ export const register = async (req, res, next) => {
 // @access  Public
 export const login = async (req, res, next) => {
   try {
-    const { email, username, identifier, password } = req.body;
-    const loginKey = (email || username || identifier || '').trim().toLowerCase();
+    const { email, username, identifier, password } = req.body || {};
+    const rawInput = typeof email === 'string' ? email : typeof username === 'string' ? username : typeof identifier === 'string' ? identifier : '';
+    const loginKey = rawInput.trim().toLowerCase();
 
-    if (!loginKey || !password) {
+    if (!loginKey || typeof password !== 'string' || !password) {
       return res.status(400).json({ success: false, message: 'Please provide an email/username and password' });
     }
 
